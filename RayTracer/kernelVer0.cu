@@ -50,7 +50,7 @@ __global__ void render(point3* point, int max_x, int max_y) {
 }
 
 
-int main() {
+int main_version1() {
     //image 
     auto fileName = "C:\\Users\\Shyam Poovaiah\\Desktop\\image.ppm";
 
@@ -80,6 +80,7 @@ int main() {
 
     return 0;
 }
+
 
 
 
