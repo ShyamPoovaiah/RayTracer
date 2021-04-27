@@ -1,11 +1,14 @@
 ﻿#include "color.h"
 #include "ray.h"
 #include "vec3.h"
-#include <fstream>
+#include "utilities.h"
 
-#include <iostream>
 
-bool hit_sphere(const point3& center, double radius, const ray& r) {
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+
+
+__device__ bool hit_sphere(const point3& center, double radius, const ray& r) {
     vec3 oc = r.origin() - center;
     auto a = dot(r.direction(), r.direction());
     auto b = 2.0 * dot(oc, r.direction());
@@ -14,7 +17,7 @@ bool hit_sphere(const point3& center, double radius, const ray& r) {
     return (discriminant > 0);
 }
 
-color ray_color(const ray& r) {
+__device__ color ray_color(const ray& r) {
     if (hit_sphere(point3(0, 0, -1), 0.5, r))
         return color(1, 0, 0); //red if it hits
     vec3 unit_direction = unit_vector(r.direction());
@@ -22,20 +25,30 @@ color ray_color(const ray& r) {
     return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
 }
 
-void output_color(const color pixel_color, std::ofstream& outfile)
-{
-    outfile << static_cast<int>(255.999 * pixel_color.x()) << ' '
-        << static_cast<int>(255.999 * pixel_color.y()) << ' '
-        << static_cast<int>(255.999 * pixel_color.z()) << '\n';
-    
+__global__ void render(point3* pixels, int max_x, int max_y, 
+     vec3 lower_left_corner, vec3 horizontal, vec3 vertical, vec3 origin) {
+
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    int j = threadIdx.y + blockIdx.y * blockDim.y;
+    if ((i >= max_x) || (j >= max_y)) return;
+    int pixel_index = j * max_x + i;
+
+    auto u = double(i) / (max_x - 1);
+    auto v = double(j) / (max_y - 1);
+    ray r(origin, lower_left_corner + u * horizontal + v * vertical - origin);
+    pixels[pixel_index] = ray_color(r);
 }
+
+
 
 int main() {
 
     // Image
     const auto aspect_ratio = 16.0 / 9.0;
-    const int image_width = 400;
-    const int image_height = static_cast<int>(image_width / aspect_ratio);
+    const int nx = 400;
+    const int ny = static_cast<int>(nx / aspect_ratio);
+
+    const int pixel_size = nx * ny * sizeof(vec3);
 
     // Camera
 
@@ -48,26 +61,26 @@ int main() {
     auto vertical = vec3(0, viewport_height, 0);
     auto lower_left_corner = origin - horizontal / 2 - vertical / 2 - vec3(0, 0, focal_length);
 
-    // Render
+    int tx = 8;
+    int ty = 8;
 
-    std::ofstream outfile;
+    point3* pixels;
+    checkCudaErrors(cudaMallocManaged((void**)&pixels, pixel_size));
+
+    dim3 blocks(nx / tx + 1, ny / ty + 1);
+    dim3 threads(tx, ty);
+    render <<<blocks, threads >>> (pixels, nx, ny, lower_left_corner, horizontal, vertical, origin);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
     auto fileName = "C:\\Users\\Shyam Poovaiah\\Desktop\\image.ppm";
-    outfile.open(fileName, std::ios_base::app); // append instead of overwrit
-    outfile << "P3\n" << image_width << " " << image_height << "\n255\n";
+    output_image(pixels, nx, ny, fileName);
+
+    checkCudaErrors(cudaFree(pixels));
+
+    return 0;
+
+   
 
     
-
-    for (int j = image_height - 1; j >= 0; --j) {
-        std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
-        for (int i = 0; i < image_width; ++i) {
-            auto u = double(i) / (image_width - 1);
-            auto v = double(j) / (image_height - 1);
-            ray r(origin, lower_left_corner + u * horizontal + v * vertical - origin);
-            color pixel_color = ray_color(r);
-            //write_color(std::cout, pixel_color);
-            output_color(pixel_color, outfile);
-        }
-    }
-
-    std::cerr << "\nDone.\n";
 }

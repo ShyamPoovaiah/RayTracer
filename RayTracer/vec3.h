@@ -144,6 +144,6 @@ __host__ __device__ inline vec3 unit_vector(vec3 v) {
 
 // Type aliases for vec3
 using point3 = vec3;   // 3D point
-using color = vec3;    // RGB color
+using color = vec3;
 
 #endif
