@@ -45,9 +45,8 @@ __global__ void render(point3* point, int max_x, int max_y) {
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if ((i >= max_x) || (j >= max_y)) return;
     int pixel_index = j * max_x  + i ;
-    point[pixel_index][0] = float(i) / max_x;
-    point[pixel_index][1] = float(j) / max_y;
-    point[pixel_index][2] = 0.2;
+
+    point[pixel_index] = point3(float(i) / max_x, float(j) / max_y, 0.2);
 }
 
 
