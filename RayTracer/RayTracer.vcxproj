@@ -79,10 +79,15 @@
   <ItemGroup>
     <CudaCompile Include="kernelVer0.cu" />
     <CudaCompile Include="KernelVer1.cu" />
+    <CudaCompile Include="kernelVersion2.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="color.h" />
+    <ClInclude Include="hittable.h" />
+    <ClInclude Include="hittable_list.h" />
     <ClInclude Include="ray.h" />
+    <ClInclude Include="rtweekend.h" />
+    <ClInclude Include="sphere.h" />
     <ClInclude Include="utilities.h" />
     <ClInclude Include="vec3.h" />
   </ItemGroup>
