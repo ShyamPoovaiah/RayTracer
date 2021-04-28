@@ -77,9 +77,7 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="kernelVer0.cu" />
-    <CudaCompile Include="kernelVer1.cu" />
-    <CudaCompile Include="kernelVersion2.cu" />
+    <CudaCompile Include="3_diffuse_materials_kernel.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />

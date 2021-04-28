@@ -65,7 +65,7 @@ __global__ void free_world(hittable** d_list, hittable** d_world, camera** d_cam
 
 
 
-int main() {
+int main_anti_alias() {
 
     // Image
 
@@ -140,4 +140,6 @@ int main() {
    
 
     std::cerr << "\nDone.\n";
+
+    return 0;
 }
